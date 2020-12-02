@@ -1,11 +1,28 @@
 public class Sudoku implements SudokuSolver {
 
+    /**
+     *  1. Skriva test
+     *  2. Skriva fina kommentarer enligt javadoc-standard
+     *  3. GUI
+     *
+     *
+     */
+
+
+
     private int board[][];
 
     public Sudoku() {
         this.board = new int[9][9];
     }
 
+    /**
+     * Checks if the
+     * @param row
+     * @param col
+     * @param value
+     * @return
+     */
     private boolean isOk(int row, int col, int value) {
         for (int i = 0; i < 8; i++) {
             if (board[row][i] == value || board[i][col] == value)
