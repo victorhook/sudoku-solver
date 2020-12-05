@@ -85,6 +85,7 @@ public class SudokuGUI extends Application {
         scene.getStylesheets().add(css);
     }
 
+    /** Callback from randomize-button. */
     private void randomize() {
         sudoku.clear();
         sudoku.randomize();
@@ -93,18 +94,8 @@ public class SudokuGUI extends Application {
         updateUI();
     }
 
-    private static void fillRandomNumbers() {
-        for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) {
-                int res = sudoku.getCell(r, c);
-                if (res > 0)
-                    randomNumbers.add(new Square(r, c));
-            }
-        }
-    }
-
+    /** Callback from clear-button. */
     private static void clear() {
-
         Function clearUI = () -> {
             sudoku.clear();
             updateUI();
@@ -122,6 +113,28 @@ public class SudokuGUI extends Application {
         }
     }
 
+    /** Callback form the solve-button. */
+    private static void solve() {
+        copyUIBoard();
+        startSolving();
+    }
+
+    /** Fills a list with squares that the sudoku-board has just filled with random numbers.
+     *  This is needed because these squares will be ignored when later copying to UI-board to the sudoku.
+     */
+    private static void fillRandomNumbers() {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                int res = sudoku.getCell(r, c);
+                if (res > 0)
+                    randomNumbers.add(new Square(r, c));
+            }
+        }
+    }
+
+    /** Copies the UI-cells to the sudoku-board.
+     * randomNumbers contain numbers that have already been generated and filled by the sudoku,
+     * so these are ignored. */
     private static void copyUIBoard() {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
@@ -136,11 +149,7 @@ public class SudokuGUI extends Application {
         }
     }
 
-    private static void solve() {
-        copyUIBoard();
-        startSolving();
-    }
-
+    /** Starts the solver-thread and updates the status-label accordingly. */
     private static void startSolving() {
         solverTask = new SolverTask();
         solverTask.setOnSucceeded(solvable -> {
@@ -156,6 +165,7 @@ public class SudokuGUI extends Application {
         status.setText("Solving...");
     }
 
+    /** Updates all the cells according to the sudoku-board. */
     private static void updateUI() {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
@@ -166,12 +176,16 @@ public class SudokuGUI extends Application {
     }
 
     static class Cell extends TextField {
+        /** This class represents a cell on the sudoku-board. */
+
         int row, col;
         final static int SIZE = 70;
 
         public Cell(int row, int col) {
             this.row = row;
             this.col = col;
+
+            // Brute-force the size of the cell..
             this.setMinSize(SIZE, SIZE);
             this.setMaxSize(SIZE, SIZE);
             this.setPrefSize(SIZE, SIZE);
@@ -180,8 +194,8 @@ public class SudokuGUI extends Application {
             // Ensure that you can only enter 1-9 in the cells, with a somewhat hacky solution.
             this.textProperty().addListener(
                     (obs, oldValue, newValue) -> {
-                        // Grab the last character of the textfield
                         newValue = newValue.strip();
+                        // Grab the last character of the textfield (if more than 1)
                         newValue = newValue.length() > 0 ? newValue.substring(newValue.length()-1) : newValue;
                         if (newValue.matches("[1-9]")) {
                             // If new value is between 1-9, it's ok
@@ -202,6 +216,7 @@ public class SudokuGUI extends Application {
          * Helper class to help differentiate between cells that have been filled in by the
          * "randomize" method and cells that have been filled in by hand.
          */
+
         int row, col;
         Square(int row, int col) {
             this.row = row;
@@ -218,6 +233,10 @@ public class SudokuGUI extends Application {
     }
 
     static class SolverTask extends Task {
+        /**
+         * This class helps us run the solve()-method at the sudoku-board in a different thread.
+         * The Task class is JavaFX's way of doing it.
+         */
 
         @Override
         protected Boolean call() {
@@ -231,15 +250,17 @@ public class SudokuGUI extends Application {
             sudoku.stopSolve();
         }
 
+        /** Start the thread as daemon, to ensure that it doesn't continue running after main thread is closed */
         void runAsDaemon() {
             Thread thread = new Thread(this);
-            thread.setDaemon(true);                      // Don't want it to continue after main program exits.
+            thread.setDaemon(true);
             thread.start();
         }
 
     }
 
     interface Function {
+    /** Helper interface */
         void call();
     }
 
