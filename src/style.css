@@ -1,9 +1,4 @@
-.root {
-    -fx-font: 20px "Courier";
-}
-
 .text-field {
-    -fx-font: 30px "Courier";
     -fx-alignment: center;
     -fx-border-color: black;
     -fx-border-width: 1 1 1 1;

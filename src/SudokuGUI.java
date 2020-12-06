@@ -14,6 +14,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -27,6 +29,9 @@ public class SudokuGUI extends Application {
 
     static final String STYLE_SHEET = "style.css";
     static List<Square> randomNumbers;
+
+    static final Font FONT_BOLD = Font.font ("Courier", FontWeight.BOLD, 30),
+                      FONT_NORMAL = Font.font ("Courier", 30);
 
     static SolverTask solverTask;
 
@@ -73,6 +78,8 @@ public class SudokuGUI extends Application {
 
         frame.getChildren().addAll(statusBox, board, buttonFrame);
 
+        resetFonts();
+
         Scene scene = new Scene(frame);
 
         addStyleSheet(scene);
@@ -100,6 +107,7 @@ public class SudokuGUI extends Application {
             sudoku.clear();
             updateUI();
             randomNumbers.clear();
+            resetFonts();
             status.setText("");
         };
 
@@ -110,6 +118,14 @@ public class SudokuGUI extends Application {
             solverTask.setOnSucceeded(e -> clearUI.call());
         } else {
             clearUI.call();
+        }
+    }
+
+    private static void resetFonts() {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                cells[r][c].setFont(FONT_NORMAL);
+            }
         }
     }
 
@@ -126,8 +142,10 @@ public class SudokuGUI extends Application {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 int res = sudoku.getCell(r, c);
-                if (res > 0)
+                if (res > 0) {
                     randomNumbers.add(new Square(r, c));
+                    cells[r][c].setFont(FONT_BOLD);
+                }
             }
         }
     }
@@ -174,6 +192,8 @@ public class SudokuGUI extends Application {
             }
         }
     }
+
+
 
     static class Cell extends TextField {
         /** This class represents a cell on the sudoku-board. */
