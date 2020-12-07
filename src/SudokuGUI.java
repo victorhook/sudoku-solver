@@ -18,6 +18,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,9 +113,10 @@ public class SudokuGUI extends Application {
             status.setText("");
         };
 
-        if (solverTask.isRunning()) {
+        // Must ensure task has been created.
+        if (solverTask != null && solverTask.isRunning()) {
             // Update UI once the task finishes. Since it's running as a seperate thread
-            // this is asyncrhonous and needs to be done in a callback.
+            // this is asynchronous and needs to be done in a callback.
             solverTask.stopSolve();
             solverTask.setOnSucceeded(e -> clearUI.call());
         } else {
@@ -131,8 +134,11 @@ public class SudokuGUI extends Application {
 
     /** Callback form the solve-button. */
     private static void solve() {
-        copyUIBoard();
-        startSolving();
+        boolean okBoard = copyUIBoard();
+        if (okBoard)
+            startSolving();
+        else
+            status.setText("Invalid board");
     }
 
     /** Fills a list with squares that the sudoku-board has just filled with random numbers.
@@ -153,18 +159,25 @@ public class SudokuGUI extends Application {
     /** Copies the UI-cells to the sudoku-board.
      * randomNumbers contain numbers that have already been generated and filled by the sudoku,
      * so these are ignored. */
-    private static void copyUIBoard() {
+    private static boolean copyUIBoard() {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 if (!randomNumbers.contains(new Square(r, c))) {
                     String value = cells[r][c].getText();
                     if (!value.equals(" ")) {
                         int cell = Integer.parseInt(value);
-                        sudoku.setCell(r, c, cell);
+                        try {
+                            sudoku.setCell(r, c, cell);
+                        } catch (IllegalArgumentException e) {
+                            // If this exception occurs, the board is invalid according to the sudoku-rules.
+                            // Exit quick and inform user that it's not solvable.
+                            return false;
+                        }
                     }
                 }
             }
         }
+        return true;
     }
 
     /** Starts the solver-thread and updates the status-label accordingly. */
@@ -266,8 +279,20 @@ public class SudokuGUI extends Application {
             return result;
         }
 
+        /**
+         * This method stops the backend-engine by calling stopSolve() on the engine.
+         * However, since this is not in the SudokuSolver-interface, the method might
+         * not exist, depending on the solver-engine implementation.
+         */
         void stopSolve() {
-            sudoku.stopSolve();
+            try {
+                Method stopSolve = Sudoku.class.getDeclaredMethod("stopSolve");
+                stopSolve.invoke(sudoku);
+            }
+            // Not much to do... Just wait for backend to finish.
+            catch (NoSuchMethodException e) {}
+            catch (IllegalAccessException e) {}
+            catch (InvocationTargetException e) {}
         }
 
         /** Start the thread as daemon, to ensure that it doesn't continue running after main thread is closed */
