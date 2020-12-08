@@ -1,7 +1,5 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Random;
+import java.io.*;
+import java.util.*;
 
 public class Sudoku implements SudokuSolver {
 
@@ -15,11 +13,15 @@ public class Sudoku implements SudokuSolver {
 
     private int[][] board;
     private final static Random RAND = new Random(1337);
+    private static final File TABLE_PATH = new File("sudoku-solver/solutions/table");
+
+    private static Map<String, String> table;
 
     private volatile boolean running;
 
     public Sudoku() {
         this.board = new int[9][9];
+        readTable();
     }
 
     /** Checks if the given cell and value is valid. Naively expects that all numbers
@@ -88,7 +90,21 @@ public class Sudoku implements SudokuSolver {
     @Override
     public boolean solve() {
         running = true;
-        return solve(0, 0);
+        String input = stringify();
+        String solution = findSolution();
+
+        boolean result = false;
+
+        if (solution == null) {
+            result = solve(0, 0);
+            saveResult(input, result);
+        } else if (hasSolution(solution)) {
+            System.out.println("Found saved result");
+            decode(solution.getBytes());
+            result = true;
+        }
+
+        return result;
     }
 
     /** Stops the current attempt to solve the board.
@@ -153,6 +169,48 @@ public class Sudoku implements SudokuSolver {
      *  External engines can be found in /engines
      */
 
+    private Map<String, String> readTable() {
+        table = new HashMap<>();
+        try {
+            Scanner scan = new Scanner(TABLE_PATH);
+            while (scan.hasNext()) {
+                table.put(scan.next(), scan.next());
+            }
+            scan.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return table;
+    }
+
+    private void saveResult(String input, boolean boardHasSolution) {
+        try {
+            FileWriter writer = new FileWriter(TABLE_PATH, true);
+            String row = String.format("%s %s\n", input, stringify());
+            writer.write(row);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String findSolution() {
+        return table.getOrDefault(stringify(), null);
+    }
+
+    private boolean hasSolution(String solution) {
+        return !solution.equals("X");
+    }
+
+    public static void main(String[] args) {
+        Sudoku sudoku = new Sudoku();
+        sudoku.randomize();
+        sudoku.solve();
+
+
+    }
+
+
     /** Compares the two different backend-engines in solving-speed. */
     private void engineTest() {
         clear();
@@ -204,7 +262,7 @@ public class Sudoku implements SudokuSolver {
     private void decode(byte[] input) {
         int r = 0, c = 0;
         for (int i = 0; i < input.length; i++) {
-            board[r][c] = input[i] - 48;
+            board[r][c] = input[i] - '0';
             if (c == 8) {
                 r++;
                 c = 0;
