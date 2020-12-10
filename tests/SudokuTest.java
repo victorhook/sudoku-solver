@@ -1,12 +1,11 @@
 import static org.junit.jupiter.api.Assertions.*;
 
 class SudokuTest {
-    private SudokuSolver sudoku = new Sudoku();
-
+    private SudokuSolver sudoku;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-
+        sudoku = new Sudoku();
     }
 
     @org.junit.jupiter.api.AfterEach

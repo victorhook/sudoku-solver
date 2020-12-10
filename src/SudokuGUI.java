@@ -39,8 +39,8 @@ public class SudokuGUI extends Application {
                                                 CornerRadii.EMPTY, Insets.EMPTY)),
                             BACKGROUND_NORMAL = new Background(new BackgroundFill(Color.TRANSPARENT,
                                     CornerRadii.EMPTY, Insets.EMPTY));
-
     static SolverTask solverTask;
+    static double timer;
 
     @Override
     public void start(Stage stage) {
@@ -70,18 +70,21 @@ public class SudokuGUI extends Application {
         HBox buttonFrame = new HBox(10);
         Button btnSolve = new Button("Solve");
         Button btnClear = new Button("Clear");
-        Button btnRandomize = new Button("Randomize");
-        buttonFrame.getChildren().addAll(btnSolve, btnClear, btnRandomize);
+        Button btnRandomize = new Button("New");
+        Button btnFill = new Button("Demo");
+        buttonFrame.getChildren().addAll(btnSolve, btnClear, btnRandomize, btnFill);
 
         // Status label
         HBox statusBox = new HBox();
         status = new Label();
+        status.setId("status");
         statusBox.getChildren().add(status);
 
         // Attach callbacks
         btnSolve.setOnAction(e -> solve());
         btnClear.setOnAction(e -> clear());
         btnRandomize.setOnAction(e -> randomize());
+        btnFill.setOnAction(e -> fillDemo());
 
         frame.getChildren().addAll(statusBox, board, buttonFrame);
 
@@ -92,6 +95,37 @@ public class SudokuGUI extends Application {
         addStyleSheet(scene);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void fillDemo() {
+        sudoku.clear();
+        sudoku.setCell(0, 2, 8);
+        sudoku.setCell(0, 5, 9);
+        sudoku.setCell(0, 7, 6);
+        sudoku.setCell(0, 8, 2);
+        sudoku.setCell(1, 8, 5);
+        sudoku.setCell(2, 0, 1);
+        sudoku.setCell(2, 2, 2);
+        sudoku.setCell(2, 3, 5);
+        sudoku.setCell(3, 3, 2);
+        sudoku.setCell(3, 4, 1);
+        sudoku.setCell(3, 7, 9);
+        sudoku.setCell(4, 1, 5);
+        sudoku.setCell(4, 6, 6);
+        sudoku.setCell(5, 0, 6);
+        sudoku.setCell(5, 7, 2);
+        sudoku.setCell(5, 8, 8);
+        sudoku.setCell(6, 0, 4);
+        sudoku.setCell(6, 1, 1);
+        sudoku.setCell(6, 3, 6);
+        sudoku.setCell(6, 5, 8);
+        sudoku.setCell(7, 0, 8);
+        sudoku.setCell(7, 1, 6);
+        sudoku.setCell(7, 4, 3);
+        sudoku.setCell(7, 6, 1);
+        sudoku.setCell(8, 6, 4);
+        fillRandomNumbers();
+        updateUI();
     }
 
     private void addStyleSheet(Scene scene) {
@@ -141,11 +175,13 @@ public class SudokuGUI extends Application {
     /** Callback form the solve-button. */
     private static void solve() {
         List<Square> invalidNumbers = copyUIBoard();
-        if (invalidNumbers.size() == 0)
+        if (invalidNumbers.size() == 0) {
             startSolving();
+        }
         else {
             status.setText("Invalid board");
             colorRed(invalidNumbers);
+            sudoku.clear();
         }
 
     }
@@ -201,11 +237,12 @@ public class SudokuGUI extends Application {
         solverTask = new SolverTask();
         solverTask.setOnSucceeded(solvable -> {
             if (((Task<Boolean>) solvable.getSource()).getValue()) {
-                status.setText("Solved");
+                status.setText(String.format("Solved in %.3f seconds", timer / 1000));
                 updateUI();
             } else {
                 status.setText("Failed to solve sudoku");
             }
+            sudoku.clear();
         });
         solverTask.runAsDaemon();
 
@@ -289,7 +326,9 @@ public class SudokuGUI extends Application {
 
         @Override
         protected Boolean call() {
+            timer = System.currentTimeMillis();
             boolean result = sudoku.solve();
+            timer = System.currentTimeMillis() - timer;
             if (isCancelled())
                 result = false;
             return result;

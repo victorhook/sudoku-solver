@@ -26,6 +26,10 @@ HBox, VBox {
     -fx-padding: 10;
 }
 
+#status {
+        -fx-font: 30px "Courier";
+}
+
 /* These IDS are used to create the 3x3 grids */
 #row {
     -fx-border-width: 7 1 1 1;
