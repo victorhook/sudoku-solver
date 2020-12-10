@@ -39,8 +39,8 @@ public class SudokuGUI extends Application {
                                                 CornerRadii.EMPTY, Insets.EMPTY)),
                             BACKGROUND_NORMAL = new Background(new BackgroundFill(Color.TRANSPARENT,
                                     CornerRadii.EMPTY, Insets.EMPTY));
-
     static SolverTask solverTask;
+    static double timer;
 
     @Override
     public void start(Stage stage) {
@@ -77,6 +77,7 @@ public class SudokuGUI extends Application {
         // Status label
         HBox statusBox = new HBox();
         status = new Label();
+        status.setId("status");
         statusBox.getChildren().add(status);
 
         // Attach callbacks
@@ -236,7 +237,7 @@ public class SudokuGUI extends Application {
         solverTask = new SolverTask();
         solverTask.setOnSucceeded(solvable -> {
             if (((Task<Boolean>) solvable.getSource()).getValue()) {
-                status.setText("Solved");
+                status.setText(String.format("Solved in %.3f seconds", timer / 1000));
                 updateUI();
             } else {
                 status.setText("Failed to solve sudoku");
@@ -325,7 +326,9 @@ public class SudokuGUI extends Application {
 
         @Override
         protected Boolean call() {
+            timer = System.currentTimeMillis();
             boolean result = sudoku.solve();
+            timer = System.currentTimeMillis() - timer;
             if (isCancelled())
                 result = false;
             return result;
