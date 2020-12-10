@@ -3,16 +3,15 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -31,9 +30,15 @@ public class SudokuGUI extends Application {
 
     static final String STYLE_SHEET = "style.css";
     static List<Square> randomNumbers;
+    static List<Square> invalidNumbers;
 
-    static final Font FONT_BOLD = Font.font ("Courier", FontWeight.BOLD, 30),
-                      FONT_NORMAL = Font.font ("Courier", 30);
+    static final Font FONT_BOLD = Font.font ("Courier", FontWeight.BOLD, 25),
+                      FONT_NORMAL = Font.font ("Courier", 25);
+
+    static final Background BACKGROUND_RED = new Background(new BackgroundFill(Color.RED,
+                                                CornerRadii.EMPTY, Insets.EMPTY)),
+                            BACKGROUND_NORMAL = new Background(new BackgroundFill(Color.TRANSPARENT,
+                                    CornerRadii.EMPTY, Insets.EMPTY));
 
     static SolverTask solverTask;
 
@@ -128,17 +133,27 @@ public class SudokuGUI extends Application {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 cells[r][c].setFont(FONT_NORMAL);
+                cells[r][c].setBackground(BACKGROUND_NORMAL);
             }
         }
     }
 
     /** Callback form the solve-button. */
     private static void solve() {
-        boolean okBoard = copyUIBoard();
-        if (okBoard)
+        List<Square> invalidNumbers = copyUIBoard();
+        if (invalidNumbers.size() == 0)
             startSolving();
-        else
+        else {
             status.setText("Invalid board");
+            colorRed(invalidNumbers);
+        }
+
+    }
+
+    private static void colorRed(List<Square> list) {
+        for(int i = 0; i < list.size(); i++){
+            cells[list.get(i).row][list.get(i).col].setBackground(BACKGROUND_RED);
+        }
     }
 
     /** Fills a list with squares that the sudoku-board has just filled with random numbers.
@@ -159,7 +174,8 @@ public class SudokuGUI extends Application {
     /** Copies the UI-cells to the sudoku-board.
      * randomNumbers contain numbers that have already been generated and filled by the sudoku,
      * so these are ignored. */
-    private static boolean copyUIBoard() {
+    private static List<Square> copyUIBoard() {
+        invalidNumbers = new ArrayList<>();
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 if (!randomNumbers.contains(new Square(r, c))) {
@@ -171,13 +187,13 @@ public class SudokuGUI extends Application {
                         } catch (IllegalArgumentException e) {
                             // If this exception occurs, the board is invalid according to the sudoku-rules.
                             // Exit quick and inform user that it's not solvable.
-                            return false;
+                            invalidNumbers.add(new Square(r, c));
                         }
                     }
                 }
             }
         }
-        return true;
+        return invalidNumbers;
     }
 
     /** Starts the solver-thread and updates the status-label accordingly. */
@@ -212,7 +228,7 @@ public class SudokuGUI extends Application {
         /** This class represents a cell on the sudoku-board. */
 
         int row, col;
-        final static int SIZE = 70;
+        final static int SIZE = 60;
 
         public Cell(int row, int col) {
             this.row = row;
