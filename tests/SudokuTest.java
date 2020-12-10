@@ -55,13 +55,20 @@ class SudokuTest {
         assertThrows(IllegalArgumentException.class, () ->
                 sudoku.setCell(0, 2, 6));
     }
+
+    /**
+     * Asserts that a cell can be given a value between 1-9. The cell cannot be out of bounds.
+     */
     @org.junit.jupiter.api.Test
     void setCell() {
         sudoku.setCell(1,1, 6);
         assertEquals(6, sudoku.getCell(1, 1), "Fel värde i rutan.");
     }
 
-
+    /**
+     * Asserts that an attempt to assign a value to a cell that is out of bounds generates an
+     * IllegalArgumentException.
+     */
     @org.junit.jupiter.api.Test
     void setCellOutOfBounds(){
         assertThrows(IllegalArgumentException.class, () ->
