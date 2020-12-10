@@ -2,6 +2,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SudokuTest {
     private SudokuSolver sudoku = new Sudoku();
+
+
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
 
@@ -12,31 +14,61 @@ class SudokuTest {
         sudoku.clear();
     }
 
-    @org.junit.jupiter.api.Test
-    void solveUnsolvable() {
-        sudoku.setCell(1,1, 4);
-        sudoku.setCell(8, 1, 7);
-        sudoku.setCell(5, 1, 4);
-        assertFalse(sudoku.solve(), "The sudoku should not be solvable!");
-    }
-
+    /**
+     * Tries to solve an empty soduku.
+     */
     @org.junit.jupiter.api.Test
     void solveEmpty() {
         assertTrue(sudoku.solve(), "Empty sudoku board cannot be solved.");
     }
 
+    /**
+     * Tries to set a cell that breaks the rule of Sudoku that states that two identical numbers
+     * cannot be put in the same column.
+     */
+    @org.junit.jupiter.api.Test
+    void throwableCellSameRow() {
+        sudoku.setCell(1,1,3);
+        assertThrows(IllegalArgumentException.class,() -> sudoku.setCell(1,2, 3));
+    }
+
+    /**
+     * Tries to set a cell that breaks the rule of Sudoku that states that two identical numbers
+     * cannot be put in the same row.
+     */
+    @org.junit.jupiter.api.Test
+    void throwableCellSameCol() {
+        sudoku.setCell(1,1,3);
+        assertThrows(IllegalArgumentException.class,() ->
+                sudoku.setCell(2,1, 3));
+    }
+
+    /**
+     * Tests if it is possible to put two identical numbers in the same region and
+     * asserts it is possible to do so in two different ones.
+     */
+    @org.junit.jupiter.api.Test
+    void getThrowableCellSameRegion(){
+        sudoku.setCell(1, 1, 6);
+        sudoku.setCell(5, 4, 6);
+        assertEquals(6, sudoku.getCell(5, 4));
+        assertThrows(IllegalArgumentException.class, () ->
+                sudoku.setCell(0, 2, 6));
+    }
     @org.junit.jupiter.api.Test
     void setCell() {
         sudoku.setCell(1,1, 6);
         assertEquals(6, sudoku.getCell(1, 1), "Fel värde i rutan.");
     }
 
+
     @org.junit.jupiter.api.Test
-    void setThrowableCell(){
+    void setCellOutOfBounds(){
         assertThrows(IllegalArgumentException.class, () ->
                 sudoku.setCell(10, 3, 7)
         );
     }
+
 
     @org.junit.jupiter.api.Test
     void getCell() {
@@ -53,6 +85,7 @@ class SudokuTest {
         sudoku.setCell(1, 8, 5);
         sudoku.setCell(2, 0, 1);
         sudoku.setCell(2, 2, 2);
+        sudoku.setCell(2, 3, 5);
         sudoku.setCell(3, 3, 2);
         sudoku.setCell(3, 4, 1);
         sudoku.setCell(3, 7, 9);
@@ -70,8 +103,10 @@ class SudokuTest {
         sudoku.setCell(7, 4, 3);
         sudoku.setCell(7, 6, 1);
         sudoku.setCell(8, 6, 4);
+        sudoku.toString();
 
-            assertTrue(sudoku.solve(), "Sudoku cannot be solved.");
+        boolean flag = sudoku.solve();
+            assertTrue(flag, "Sudoku cannot be solved.");
 
     }
 }
