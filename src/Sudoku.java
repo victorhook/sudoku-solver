@@ -12,8 +12,10 @@ public class Sudoku implements SudokuSolver {
      */
 
     private int[][] board;
-    private final static Random RAND = new Random(1337);
-    private static final File TABLE_PATH = new File("sudoku-solver/solutions/table");
+    private static final int MAX_SOLUTIONS = 1;
+    private final static Random RAND = new Random();
+    private static final String TABLE_PATH = "sudoku-solver/solutions/table";
+
 
     private static Map<String, String> table;
 
@@ -21,6 +23,7 @@ public class Sudoku implements SudokuSolver {
 
     public Sudoku() {
         this.board = new int[9][9];
+        solutions = new ArrayList<>();
         readTable();
     }
 
@@ -75,6 +78,56 @@ public class Sudoku implements SudokuSolver {
         return false;
     }
 
+    private List<int[][]> solutions;
+
+    private int[][] copy(int[][] matrix) {
+        int[][] tmp = new int[matrix.length][matrix[0].length];
+        for (int r = 0; r < matrix.length; r++) {
+            for (int c = 0; c < matrix[0].length; c++) {
+                tmp[r][c] = matrix[r][c];
+            }
+        }
+        return tmp;
+    }
+
+    private void solveMultiple(int row, int col) {
+        if (!running)
+            return;
+
+        if (col == 9) {
+            if (row == 8) {
+                System.out.printf("Solutions found: %s\n", solutions.size());
+                if (solutions.size() < MAX_SOLUTIONS)
+                    solutions.add(copy(board));
+                return;
+            }
+            row++;
+            col = 0;
+        }
+
+        if (board[row][col] == 0) {
+            for (int value = 1; value <= 9; value++) {
+                if (isOk(row, col, value)) {
+                    board[row][col] = value;        // Sets cell
+                    // Try to find solution
+                    solveMultiple(row, col+1);
+                    // Backtrack no matter what
+                    board[row][col] = 0;
+                }
+            }
+        } else {
+            solve(row, col+1);
+        }
+    }
+
+    public static void main(String[] args) {
+        Sudoku sudoku = new Sudoku();
+        sudoku.randomize();
+        System.out.println(sudoku);
+        sudoku.solve();
+        System.out.println(sudoku);
+    }
+
     /** Returns a visual representation of the board */
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -91,15 +144,15 @@ public class Sudoku implements SudokuSolver {
     public boolean solve() {
         running = true;
         String input = stringify();
-        String solution = findSolution();
+        String solution = findSavedSolution();
 
         boolean result = false;
 
         if (solution == null) {
+            // No old solution found, try to solve the sudoku.
             result = solve(0, 0);
             saveResult(input, result);
         } else if (hasSolution(solution)) {
-            System.out.println("Found saved result");
             decode(solution.getBytes());
             result = true;
         }
@@ -115,7 +168,7 @@ public class Sudoku implements SudokuSolver {
 
     @Override
     public void randomize() {
-        final int CELLS_TO_FILL = 16;
+        final int CELLS_TO_FILL = 5 + RAND.nextInt(8);
         int filled = 0;
         int r, c;
         while (filled < CELLS_TO_FILL) {
@@ -172,7 +225,13 @@ public class Sudoku implements SudokuSolver {
     private Map<String, String> readTable() {
         table = new HashMap<>();
         try {
-            Scanner scan = new Scanner(TABLE_PATH);
+            File file = new File(TABLE_PATH);
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            }
+
+            Scanner scan = new Scanner(file);
             while (scan.hasNext()) {
                 table.put(scan.next(), scan.next());
             }
@@ -186,7 +245,12 @@ public class Sudoku implements SudokuSolver {
     private void saveResult(String input, boolean boardHasSolution) {
         try {
             FileWriter writer = new FileWriter(TABLE_PATH, true);
-            String row = String.format("%s %s\n", input, stringify());
+            String row;
+            if (boardHasSolution) {
+                row = String.format("%s %s\n", input, stringify());
+            } else {
+                row = String.format("%s X\n", input);
+            }
             writer.write(row);
             writer.close();
         } catch (IOException e) {
@@ -194,7 +258,7 @@ public class Sudoku implements SudokuSolver {
         }
     }
 
-    private String findSolution() {
+    private String findSavedSolution() {
         return table.getOrDefault(stringify(), null);
     }
 
@@ -202,13 +266,7 @@ public class Sudoku implements SudokuSolver {
         return !solution.equals("X");
     }
 
-    public static void main(String[] args) {
-        Sudoku sudoku = new Sudoku();
-        sudoku.randomize();
-        sudoku.solve();
 
-
-    }
 
 
     /** Compares the two different backend-engines in solving-speed. */

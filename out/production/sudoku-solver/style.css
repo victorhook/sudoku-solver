@@ -1,0 +1,49 @@
+.text-field {
+    -fx-alignment: center;
+    -fx-border-color: black;
+    -fx-border-width: 1 1 1 1;
+    -fx-background-color: transparent;
+}
+
+.hyperlink {
+    -fx-border-color: transparent;
+    -fx-padding: 4 0 4 0;
+}
+
+.button {
+    -fx-font: 20px "Courier";
+    -fx-padding: 20;
+    -fx-background-color: "#555";
+    -fx-text-fill: "#fff";
+}
+
+.button:hover{
+    -fx-background-color: "#fff";
+    -fx-text-fill: "#555";
+}
+
+.label {
+    -fx-padding: 20;
+}
+
+HBox, VBox {
+    -fx-alignment: center;
+    -fx-padding: 10;
+}
+
+#status {
+        -fx-font: 30px "Courier";
+}
+
+/* These IDS are used to create the 3x3 grids */
+#row {
+    -fx-border-width: 7 1 1 1;
+}
+
+#rowAndCol {
+    -fx-border-width: 7 1 1 7;
+}
+
+#col {
+    -fx-border-width: 1 1 1 7;
+}
